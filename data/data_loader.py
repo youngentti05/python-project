@@ -10,7 +10,11 @@ def validate_csv(file_path):
     Kiểm tra file CSV có đủ cột bắt buộc không.
     Trả về True nếu hợp lệ, False nếu không.
     """
-    required_columns = ['Order ID', 'Product', 'Quantity Ordered', 'Price Each', 'Order Date', 'Purchase Address']
+    required_columns = [
+        'Mã giao dịch', 'Ngày bán', 'Tên mặt hàng', 'Mã sản phẩm',
+        'Số lượng', 'Đơn giá', 'Thành tiền', 'Mã nhân viên',
+        'Phương thức thanh toán', 'Mã khách hàng'
+    ]
     try:
         df = pd.read_csv(file_path)
         missing_columns = set(required_columns) - set(df.columns)
@@ -39,12 +43,6 @@ def load_single_file(file_path):
         df = pd.read_csv(file_path)
         df.columns = [col.strip() for col in df.columns]
 
-        # Đổi tên cột (nếu cần)
-        rename_map = {
-            'Quantity O': 'Quantity Ordered',  # Sửa lỗi chính tả nếu có
-        }
-        df.rename(columns=rename_map, inplace=True)
-
         # Xóa hàng trống
         initial_rows = len(df)
         df.dropna(inplace=True)
@@ -53,13 +51,14 @@ def load_single_file(file_path):
             logging.info(f"Đã xóa {dropped_rows} hàng trống trong {file_path}")
 
         # Chuyển đổi kiểu dữ liệu
-        df['Quantity Ordered'] = pd.to_numeric(df['Quantity Ordered'], errors='coerce')
-        df['Price Each'] = pd.to_numeric(df['Price Each'], errors='coerce')
-        df['Order Date'] = pd.to_datetime(df['Order Date'], errors='coerce')
+        df['Số lượng'] = pd.to_numeric(df['Số lượng'], errors='coerce')
+        df['Đơn giá'] = pd.to_numeric(df['Đơn giá'], errors='coerce')
+        df['Thành tiền'] = pd.to_numeric(df['Thành tiền'], errors='coerce')
+        df['Ngày bán'] = pd.to_datetime(df['Ngày bán'], errors='coerce')
 
         # Xóa hàng lỗi
         initial_rows = len(df)
-        df.dropna(subset=['Quantity Ordered', 'Price Each', 'Order Date', 'Product'], inplace=True)
+        df.dropna(subset=['Số lượng', 'Đơn giá', 'Thành tiền', 'Ngày bán', 'Tên mặt hàng'], inplace=True)
         dropped_rows = initial_rows - len(df)
         if dropped_rows > 0:
             logging.info(f"Đã xóa {dropped_rows} hàng lỗi trong {file_path}")
@@ -68,13 +67,9 @@ def load_single_file(file_path):
             logging.warning(f"File {file_path} không có dữ liệu hợp lệ sau khi làm sạch")
             return pd.DataFrame()
 
-        # Tạo cột mới để đồng bộ với analysis_functions
-        df['Doanh thu'] = df['Quantity Ordered'] * df['Price Each']
-        df['Ngày'] = df['Order Date'].dt.date
-        df['Thời gian'] = df['Order Date']
-        df['Thành phố'] = df['Purchase Address'].apply(
-            lambda x: x.split(',')[-2].strip() if isinstance(x, str) and len(x.split(',')) >= 2 else 'Không xác định'
-        )
+        # Tạo thêm cột thời gian phân tích
+        df['Ngày'] = df['Ngày bán'].dt.date
+        df['Thời gian'] = df['Ngày bán']
 
         logging.info(f"Tải thành công: {file_path} ({len(df)} dòng)")
         return df

@@ -4,6 +4,7 @@ import os
 from GUI.sidebar import SidebarGUI
 from GUI.maincontent import MainContentGUI
 from data import data_loader
+from tkinter import filedialog
 
 class TrangChuGUI:
     def __init__(self, root):
@@ -44,28 +45,38 @@ class TrangChuGUI:
         self.sidebar = SidebarGUI(self.sidebar_frame, self.handle_sidebar_select)
         self.sidebar.pack(fill="y", expand=True)
 
+    from tkinter import filedialog, messagebox
+
     def load_file(self):
-        file_path = os.path.join("data", "sales_data", "sales_data.csv")
-        if not os.path.exists(file_path):
-            self.data = None
-            self.sidebar.update_data(None)
-            self.main_content.display_result(None, None)
-            messagebox.showerror("Lỗi", f"File không tồn tại: {file_path}")
+        # Cho phép người dùng chọn nhiều file CSV
+        file_paths = filedialog.askopenfilenames(
+            title="Chọn các file dữ liệu",
+            filetypes=[("CSV Files", "*.csv")]
+        )
+
+        if not file_paths:
+            messagebox.showinfo("Thông báo", "Chưa chọn file nào.")
             return
 
         try:
-            self.data = data_loader.load_sales_data(file_path)
-            if self.data.empty or len(self.data) == 0:
+            self.data = data_loader.load_sales_data(file_paths)
+
+            if self.data.empty:
                 self.data = None
-                raise ValueError("Dữ liệu rỗng hoặc không hợp lệ.")
+                raise ValueError("Không có dữ liệu hợp lệ trong các file đã chọn.")
+
             self.sidebar.update_data(self.data)
             self.main_content.display_result(None, self.data)
-            messagebox.showinfo("Thành công", f"Đã nạp file: {os.path.basename(file_path)}")
+
+            file_names = ", ".join([os.path.basename(fp) for fp in file_paths])
+            messagebox.showinfo("Thành công", f"Đã nạp {len(file_paths)} file: {file_names}")
+
         except Exception as e:
             self.data = None
             self.sidebar.update_data(None)
             self.main_content.display_result(None, None)
-            messagebox.showerror("Lỗi", f"Không thể nạp file: {str(e)}")
+            messagebox.showerror("Lỗi", f"Không thể nạp dữ liệu: {str(e)}")
+
 
     def handle_sidebar_select(self, key):
         self.main_content.display_result(key, self.data)

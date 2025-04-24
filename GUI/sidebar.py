@@ -43,12 +43,13 @@ class SidebarGUI(tk.Frame):
             bg='#34495e', fg='white',
             activebackground='#388e3c', activeforeground='white',
             relief='flat',
-            command=lambda: self.on_menu_click(key) if self.data else self.show_warning()
+            command=lambda: self.on_menu_click(key) if self.data is not None and not self.data.empty else self.show_warning()
         )
         button.pack(fill='x', padx=10, pady=5)
         # Hiệu ứng hover
         button.bind("<Enter>", lambda e: button.config(bg='#3f5a7a'))
         button.bind("<Leave>", lambda e: button.config(bg='#34495e'))
+
 
     def update_data(self, data):
         """Cập nhật trạng thái dữ liệu."""

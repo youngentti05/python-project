@@ -23,7 +23,6 @@ class SidebarGUI(tk.Frame):
             ("Doanh Thu Theo TP", "by_city"),
             ("Doanh Thu Theo Giờ", "by_hour"),
             ("Ngày Doanh Thu Cao", "top_days"),
-            ("Doanh Thu Từng Tháng", "monthly_revenue"),
             ("Top 5 SP Doanh Thu Cao", "top_revenue_products"),
             ("Top 5 SP Doanh Thu Thấp", "bottom_revenue_products")
         ]

@@ -43,12 +43,6 @@ def top_revenue_day(df):
         return pd.DataFrame(columns=['Ngày', 'Doanh thu'])
     return df.groupby('Ngày bán')['Thành tiền'].sum().sort_values(ascending=False).head(5).reset_index(name='Doanh thu')
 
-def detailed_monthly_revenue(df):
-    if df.empty:
-        return pd.DataFrame(columns=['Tháng', 'Doanh thu'])
-    df['Tháng'] = pd.to_datetime(df['Ngày bán']).dt.to_period('M')
-    return df.groupby('Tháng')['Thành tiền'].sum().reset_index(name='Doanh thu')
-
 def top_5_highest_revenue_products(df):
     if df.empty:
         return pd.DataFrame(columns=['Tên mặt hàng', 'Doanh thu'])

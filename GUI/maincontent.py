@@ -79,11 +79,6 @@ class MainContentGUI(tk.Frame):
                 "chart": chart_functions.plot_top_revenue_days,
                 "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
             },
-            "monthly_revenue": {
-                "analysis": analysis_functions.detailed_monthly_revenue,
-                "chart": chart_functions.plot_monthly_revenue_detail,
-                "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
-            },
             "top_revenue_products": {
                 "analysis": analysis_functions.top_5_highest_revenue_products,
                 "chart": chart_functions.plot_top_revenue_products,

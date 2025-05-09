@@ -29,7 +29,7 @@ class MainContentGUI(tk.Frame):
 
         self.result_text = tk.Text(
             text_frame, wrap=tk.WORD, width=60, height=10,
-            bg='#f1f8e9', font=('Arial', 11), bd=1, relief='solid'
+            bg='#f1f8e9', font=('Courier', 11), bd=1, relief='solid'
         )
         self.result_text.pack(side='left', fill='both', expand=True)
 
@@ -47,49 +47,95 @@ class MainContentGUI(tk.Frame):
             "monthly": {
                 "analysis": analysis_functions.revenue_by_month,
                 "chart": chart_functions.plot_monthly_revenue,
-                "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "predict": {
                 "analysis": analysis_functions.predict_revenue,
                 "chart": chart_functions.plot_predicted_revenue,
-                "format": lambda x: x
+                "format": lambda x: f"Doanh thu dự đoán: {x:,.0f} VNĐ"
             },
             "top_products": {
                 "analysis": analysis_functions.top_5_best_selling,
                 "chart": chart_functions.plot_top_5_products,
-                "format": lambda x: x.rename(columns={'Product': 'Sản phẩm'}).to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "bottom_products": {
                 "analysis": analysis_functions.bottom_5_worst_selling,
                 "chart": chart_functions.plot_bottom_5_products,
-                "format": lambda x: x.rename(columns={'Product': 'Sản phẩm'}).to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "by_city": {
                 "analysis": analysis_functions.revenue_by_city,
                 "chart": chart_functions.plot_revenue_by_city,
-                "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "by_hour": {
                 "analysis": analysis_functions.revenue_by_hour,
                 "chart": chart_functions.plot_revenue_by_hour,
-                "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "top_days": {
                 "analysis": analysis_functions.top_revenue_day,
                 "chart": chart_functions.plot_top_revenue_days,
-                "format": lambda x: x.to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "top_revenue_products": {
                 "analysis": analysis_functions.top_5_highest_revenue_products,
                 "chart": chart_functions.plot_top_revenue_products,
-                "format": lambda x: x.rename(columns={'Product': 'Sản phẩm'}).to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             },
             "bottom_revenue_products": {
                 "analysis": analysis_functions.bottom_5_lowest_revenue_products,
                 "chart": chart_functions.plot_bottom_revenue_products,
-                "format": lambda x: x.rename(columns={'Product': 'Sản phẩm'}).to_string(index=False) if not x.empty else "Không có dữ liệu"
+                "format": self.format_dataframe
             }
         }
+
+    def format_dataframe(self, df):
+        if df.empty:
+            return "Không có dữ liệu"
+        
+        # Thêm định dạng số với dấu phẩy để ngăn cách
+        formatted_df = df.copy()
+        for col in formatted_df.columns:
+            if formatted_df[col].dtype in ['int64', 'float64']:
+                formatted_df[col] = formatted_df[col].apply(lambda x: f"{x:,.0f}")
+        
+        # Đổi tên cột
+        if 'Product' in formatted_df.columns:
+            formatted_df = formatted_df.rename(columns={'Product': 'Sản phẩm'})
+        
+        COLUMN_PADDING = 10  # Khoảng cách giữa các cột
+        
+        # Xác định độ rộng max cho từng cột
+        col_widths = {}
+        for col in formatted_df.columns:
+            # Độ rộng là max dựa vào giá trị dài nhất trong cột 
+            max_width = max(
+                len(str(col)),
+                max(len(str(val)) for val in formatted_df[col]) if not formatted_df.empty else 0
+            )
+            col_widths[col] = max_width
+        
+        # Tạo chuỗi header
+        header = []
+        for col in formatted_df.columns:
+            header.append(str(col).ljust(col_widths[col] + COLUMN_PADDING))
+        header_str = ''.join(header)
+        
+        # Tạo các dòng dữ liệu
+        rows = []
+        for _, row in formatted_df.iterrows():
+            row_str = []
+            for col in formatted_df.columns:
+                cell_value = str(row[col])
+                row_str.append(cell_value.ljust(col_widths[col] + COLUMN_PADDING))
+            rows.append(''.join(row_str))
+        
+        # Kết hợp header và dữ liệu 
+        result = header_str + '\n' + '\n'.join(rows)
+        
+        return result
 
     def display_result(self, key, data=None):
         """Hiển thị kết quả văn bản và biểu đồ dựa trên key."""
@@ -131,7 +177,7 @@ class MainContentGUI(tk.Frame):
 
     def display_chart(self, fig):
         """Hiển thị biểu đồ trong giao diện."""
-        if self.chart_canvas:
+        if  self.chart_canvas:
             self.chart_canvas.get_tk_widget().destroy()
         self.chart_canvas = FigureCanvasTkAgg(fig, master=self)
         self.chart_canvas.draw()
